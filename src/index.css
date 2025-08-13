@@ -1,0 +1,74 @@
+
+@font-face {
+  font-family: "ThunderSans";
+  src: url("/src/assets/thunder-sans.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root{
+  --bg:#0e102a;
+  --card:#171a3a;
+  --accent:#8f7dff;
+  --accent2:#43d9ad;
+  --text:#ffffff;
+  --muted:#9aa1b1;
+  --danger:#ff5d73;
+  --success:#50e3a4;
+  --radius:18px;
+}
+
+*{box-sizing:border-box}
+
+html,body,#root{height:100%}
+
+body{
+  margin:0;
+  color:var(--text);
+  background:
+    radial-gradient(1000px 600px at 10% -10%, rgba(143,125,255,0.25), transparent),
+    radial-gradient(900px 600px at 110% 10%, rgba(67,217,173,0.2), transparent),
+    var(--bg);
+  font-family: ThunderSans, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+.card{
+  background: linear-gradient(180deg, var(--card), #121433);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.btn{
+  padding:14px 18px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.12);
+  font-weight:800;
+  cursor:pointer;
+  transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+  will-change: transform;
+}
+.btn:active{ transform: scale(0.98); }
+
+.buzz-big{
+  border:2px solid var(--accent);
+  font-size:42px;
+  padding:28px 34px;
+  border-radius:24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 40px rgba(143,125,255,.15);
+  background:
+    radial-gradient(200px 200px at 30% 20%, rgba(143,125,255,.3), transparent),
+    radial-gradient(220px 200px at 70% 80%, rgba(67,217,173,.3), transparent),
+    var(--card);
+}
+
+.header{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:12px 0;
+}
+
+.brand{ display:flex; gap:12px; align-items:center; }
+.brand img{ height:40px; display:block; }
+.title{ font-weight:900; letter-spacing:1px; }
+.subtitle{ color:var(--muted); font-size:12px; }
