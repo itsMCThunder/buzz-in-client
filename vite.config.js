@@ -1,15 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
+// No proxy here; frontend talks directly to Render using VITE_SERVER_URL
 export default defineConfig({
   plugins: [react()],
-  server: {
-    proxy: {
-      '/api': {
-        target: process.env.VITE_SERVER_URL, // For local dev proxy if needed
-        changeOrigin: true,
-        secure: false
-      }
-    }
-  }
-})
+  build: { outDir: 'dist' }
+});
