@@ -312,74 +312,60 @@ function Host({ room, onBack }) {
               }}
             >
               <div>
-                <h3 style={{ marginTop: 0 }}>Buzz Queue</h3>
-                {buzzQueue.length === 0 && (
-                  <div style={{ color: palette.muted }}>No buzzes yet…</div>
-                )}
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                    display: "grid",
-                    gap: 8,
-                  }}
-                >
-                  {buzzQueue.map((id, idx) => {
-                    const p = room?.players?.find((x) => x.id === id);
-                    return (
-                      <li
-                        key={id}
-                        style={{
-                          padding: 12,
-                          borderRadius: 12,
-                          background:
-                            idx === 0
-                              ? "rgba(80,227,164,.12)"
-                              : "rgba(255,255,255,.04)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 700 }}>{p?.name || id}</div>
-                          <div style={{ color: palette.muted, fontSize: 12 }}>
-                            #{idx + 1}
-                          </div>
-                        </div>
-                        {idx === 0 && (
-                          <div className="row" style={{ gap: 8 }}>
-                            <button
-                              className="btn"
-                              onClick={() => adjustScore(id, 50)}
-                              title="+50"
-                              style={pillBtn("#50e3a4")}
-                            >
-                              +50
-                            </button>
-                            <button
-                              className="btn"
-                              onClick={() => adjustScore(id, 0)}
-                              title="0"
-                              style={pillBtn("rgba(255,255,255,.2)")}
-                            >
-                              0
-                            </button>
-                            <button
-                              className="btn"
-                              onClick={() => adjustScore(id, -50)}
-                              title="-50"
-                              style={pillBtn("#ff5d73")}
-                            >
-                              -50
-                            </button>
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <h3 className="font-bold mt-4">Buzz Queue</h3>
+{room.buzzQueue.length === 0 && <p>No buzzes yet</p>}
+<ul>
+  {room.buzzQueue.map((pid, idx) => {
+    const player = room.players.find((p) => p.id === pid);
+    if (!player) return null;
+    return (
+      <li key={pid} className="flex items-center justify-between">
+        <span>{player.name}</span>
+        {idx === 0 && (
+          <div className="space-x-2">
+            <button
+              onClick={() =>
+                socket.emit("adjust_score", {
+                  roomCode: room.roomCode,
+                  playerId: player.id,
+                  delta: 50,
+                })
+              }
+              className="bg-green-500 text-white px-2 rounded"
+            >
+              +50
+            </button>
+            <button
+              onClick={() =>
+                socket.emit("adjust_score", {
+                  roomCode: room.roomCode,
+                  playerId: player.id,
+                  delta: 0,
+                })
+              }
+              className="bg-gray-400 text-white px-2 rounded"
+            >
+              0
+            </button>
+            <button
+              onClick={() =>
+                socket.emit("adjust_score", {
+                  roomCode: room.roomCode,
+                  playerId: player.id,
+                  delta: -50,
+                })
+              }
+              className="bg-red-500 text-white px-2 rounded"
+            >
+              -50
+            </button>
+          </div>
+        )}
+      </li>
+    );
+  })}
+</ul>
+
               </div>
 
               {/* players list unchanged */}
