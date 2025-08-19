@@ -22,17 +22,25 @@ function App() {
   const dingTimerRef = useRef(null);
 
   useEffect(() => {
-    const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("room_state", (payload) => setRoom(payload));
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("room_state");
-    };
-  }, []);
+  const onConnect = () => setConnected(true);
+  const onDisconnect = () => setConnected(false);
+
+  socket.on("connect", onConnect);
+  socket.on("disconnect", onDisconnect);
+
+  // listen for both room_state and room_update
+  const updateRoom = (payload) => setRoom(payload);
+  socket.on("room_state", updateRoom);
+  socket.on("room_update", updateRoom);
+
+  return () => {
+    socket.off("connect", onConnect);
+    socket.off("disconnect", onDisconnect);
+    socket.off("room_state", updateRoom);
+    socket.off("room_update", updateRoom);
+  };
+}, []);
+
 
   // Buzz + 15s Ding (host only)
   useEffect(() => {
