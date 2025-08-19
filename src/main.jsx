@@ -28,7 +28,154 @@ function App() {
       socket.off("disconnect");
       socket.off("room_update");
     };
+  }, []);import React, { useState, useEffect } from "react";
+import { createRoot } from "react-dom/client";
+import io from "socket.io-client";
+
+const socket = io(import.meta.env.VITE_SERVER_URL || "https://your-server-url.com");
+
+function App() {
+  const [name, setName] = useState("");
+  const [roomCode, setRoomCode] = useState("");
+  const [players, setPlayers] = useState([]);
+  const [joined, setJoined] = useState(false);
+  const [error, setError] = useState("");
+  const [isHost, setIsHost] = useState(false);
+
+  useEffect(() => {
+    socket.on("room_update", ({ roomCode, players }) => {
+      setRoomCode(roomCode);
+      setPlayers(players);
+    });
+
+    return () => {
+      socket.off("room_update");
+    };
   }, []);
+
+  // ------------------------
+  // Host Game
+  // ------------------------
+  const handleHostGame = () => {
+    if (!name.trim()) return setError("Enter a name to host");
+    socket.emit("create_room", { hostName: name }, (res) => {
+      if (res.ok) {
+        setRoomCode(res.roomCode);
+        setJoined(true);
+        setIsHost(true);
+        setError("");
+      } else {
+        setError(res.error || "Failed to create room");
+      }
+    });
+  };
+
+  // ------------------------
+  // Join Game
+  // ------------------------
+  const handleJoinGame = () => {
+    if (!name.trim() || !roomCode.trim()) return setError("Enter name & room code");
+    socket.emit("join_room", { roomCode, name }, (res) => {
+      if (res.ok) {
+        setJoined(true);
+        setIsHost(false);
+        setError("");
+      } else {
+        setError(res.error || "Failed to join room");
+      }
+    });
+  };
+
+  // ------------------------
+  // Award Points (Host only)
+  // ------------------------
+  const awardPoints = (playerId, points) => {
+    socket.emit("award_points", { roomCode, playerId, points });
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6">
+      <h1 className="text-4xl font-bold mb-6">Buzz In!</h1>
+
+      {!joined ? (
+        <div className="bg-gray-800 p-6 rounded-2xl shadow-lg w-96">
+          <input
+            type="text"
+            className="w-full p-3 mb-4 rounded-lg text-black"
+            placeholder="Enter your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <button
+            className="w-full bg-green-500 hover:bg-green-600 p-3 rounded-lg font-semibold mb-4"
+            onClick={handleHostGame}
+          >
+            Host Game
+          </button>
+
+          <input
+            type="text"
+            className="w-full p-3 mb-4 rounded-lg text-black"
+            placeholder="Enter room code"
+            value={roomCode}
+            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+          />
+
+          <button
+            className="w-full bg-blue-500 hover:bg-blue-600 p-3 rounded-lg font-semibold"
+            onClick={handleJoinGame}
+          >
+            Join Game
+          </button>
+
+          {error && <p className="text-red-400 mt-3">{error}</p>}
+        </div>
+      ) : (
+        <div className="bg-gray-800 p-6 rounded-2xl shadow-lg w-full max-w-2xl">
+          <h2 className="text-2xl font-bold mb-4">Room Code: {roomCode}</h2>
+          <ul className="mb-6">
+            {players.map((p) => (
+              <li
+                key={p.id}
+                className="flex justify-between items-center bg-gray-700 p-3 mb-2 rounded-lg"
+              >
+                <span>
+                  {p.name} {p.team ? `(${p.team})` : ""}
+                </span>
+                <span className="font-bold">{p.score}</span>
+                {isHost && p.id !== socket.id && (
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => awardPoints(p.id, +1)}
+                      className="bg-green-500 hover:bg-green-600 px-3 py-1 rounded-lg text-sm font-bold"
+                    >
+                      +1
+                    </button>
+                    <button
+                      onClick={() => awardPoints(p.id, -1)}
+                      className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg text-sm font-bold"
+                    >
+                      -1
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {isHost && (
+            <p className="text-yellow-400">You are the host. Use buttons to adjust scores.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);
+
 
   // Host a game
   const handleHostGame = () => {
