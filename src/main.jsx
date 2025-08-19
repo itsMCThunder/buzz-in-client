@@ -188,18 +188,20 @@ function Host({ room, onBack }) {
       }
     );
   };
+
   const clearBuzz = () =>
     socket.emit("clear_buzzers", { roomCode: room?.roomCode });
   const lock = (locked) =>
     socket.emit("lock_buzzers", { roomCode: room?.roomCode, locked });
-  const award = (pid) =>
-    socket.emit("award", { roomCode: room?.roomCode, playerId: pid, delta: 50 });
-  const penalty = (pid) =>
-    socket.emit("penalty", {
+
+  // new unified scoring helper
+  const adjustScore = (pid, delta) =>
+    socket.emit("adjust_score", {
       roomCode: room?.roomCode,
       playerId: pid,
-      delta: -50,
+      delta,
     });
+
   const next = () => socket.emit("next_question", { roomCode: room?.roomCode });
 
   // Team assignment (host-only)
@@ -342,19 +344,27 @@ function Host({ room, onBack }) {
                           <div className="row" style={{ gap: 8 }}>
                             <button
                               className="btn"
-                              onClick={() => award(id)}
-                              title="Correct (+50)"
+                              onClick={() => adjustScore(id, 50)}
+                              title="+50"
                               style={pillBtn("#50e3a4")}
                             >
-                              ✓
+                              +50
                             </button>
                             <button
                               className="btn"
-                              onClick={() => penalty(id)}
-                              title="Wrong (−50)"
+                              onClick={() => adjustScore(id, 0)}
+                              title="0"
+                              style={pillBtn("rgba(255,255,255,.2)")}
+                            >
+                              0
+                            </button>
+                            <button
+                              className="btn"
+                              onClick={() => adjustScore(id, -50)}
+                              title="-50"
                               style={pillBtn("#ff5d73")}
                             >
-                              ✗
+                              -50
                             </button>
                           </div>
                         )}
@@ -364,6 +374,7 @@ function Host({ room, onBack }) {
                 </ul>
               </div>
 
+              {/* players list unchanged */}
               <div>
                 <h3 style={{ marginTop: 0 }}>Players</h3>
                 <div style={{ display: "grid", gap: 8 }}>
@@ -446,6 +457,7 @@ function Host({ room, onBack }) {
     </div>
   );
 }
+
 
 function Player({ room, onBack }) {
   const [name, setName] = useState("");
