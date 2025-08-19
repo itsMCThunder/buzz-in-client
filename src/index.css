@@ -1,74 +1,164 @@
-
-@font-face {
-  font-family: "ThunderSans";
-  src: url("/src/assets/thunder-sans.woff2") format("woff2");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
+/* Global Theming */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #141414, #1f1f1f);
+  color: #f0f0f0;
 }
 
-:root{
-  --bg:#0e102a;
-  --card:#171a3a;
-  --accent:#8f7dff;
-  --accent2:#43d9ad;
-  --text:#ffffff;
-  --muted:#9aa1b1;
-  --danger:#ff5d73;
-  --success:#50e3a4;
-  --radius:18px;
+.app-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  text-align: center;
 }
 
-*{box-sizing:border-box}
-
-html,body,#root{height:100%}
-
-body{
-  margin:0;
-  color:var(--text);
-  background:
-    radial-gradient(1000px 600px at 10% -10%, rgba(143,125,255,0.25), transparent),
-    radial-gradient(900px 600px at 110% 10%, rgba(67,217,173,0.2), transparent),
-    var(--bg);
-  font-family: ThunderSans, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+header {
+  margin-bottom: 20px;
 }
 
-.card{
-  background: linear-gradient(180deg, var(--card), #121433);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: var(--radius);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+h1 {
+  font-size: 2.5rem;
+  color: #f5f5f5;
 }
 
-.btn{
-  padding:14px 18px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,0.12);
-  font-weight:800;
-  cursor:pointer;
-  transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
-  will-change: transform;
-}
-.btn:active{ transform: scale(0.98); }
-
-.buzz-big{
-  border:2px solid var(--accent);
-  font-size:42px;
-  padding:28px 34px;
-  border-radius:24px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 40px rgba(143,125,255,.15);
-  background:
-    radial-gradient(200px 200px at 30% 20%, rgba(143,125,255,.3), transparent),
-    radial-gradient(220px 200px at 70% 80%, rgba(67,217,173,.3), transparent),
-    var(--card);
+.status {
+  margin-top: 8px;
 }
 
-.header{
-  display:flex; align-items:center; justify-content:space-between;
-  gap:12px; padding:12px 0;
+.online {
+  color: #2ecc71;
+  font-weight: bold;
+}
+.offline {
+  color: #e74c3c;
+  font-weight: bold;
 }
 
-.brand{ display:flex; gap:12px; align-items:center; }
-.brand img{ height:40px; display:block; }
-.title{ font-weight:900; letter-spacing:1px; }
-.subtitle{ color:var(--muted); font-size:12px; }
+/* Lobby Styling */
+.lobby input {
+  display: block;
+  margin: 12px auto;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  width: 60%;
+  font-size: 1rem;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+}
+
+.btn-primary {
+  background: #2ecc71;
+  color: white;
+}
+.btn-primary:hover {
+  background: #27ae60;
+}
+
+.btn-secondary {
+  background: #3498db;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #2980b9;
+}
+
+.error {
+  color: #e74c3c;
+  margin-top: 10px;
+}
+
+/* Game Room */
+.players-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.player-card {
+  background: #2c2c2c;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+/* Host Controls */
+.host-controls {
+  margin-top: 20px;
+  padding: 15px;
+  border: 2px solid #444;
+  border-radius: 12px;
+  background: #1c1c1c;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.controls-title {
+  color: #fff;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.point-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn {
+  padding: 12px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-positive {
+  background-color: #2ecc71;
+  color: white;
+}
+.btn-positive:hover {
+  background-color: #27ae60;
+}
+
+.btn-neutral {
+  background-color: #3498db;
+  color: white;
+}
+.btn-neutral:hover {
+  background-color: #2980b9;
+}
+
+.btn-negative {
+  background-color: #e74c3c;
+  color: white;
+}
+.btn-negative:hover {
+  background-color: #c0392b;
+}
