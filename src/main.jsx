@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import io from "socket.io-client";
 
-const socket = io("https://your-server-url.onrender.com"); // replace with your server URL
+const socket = io("https://buzz-in-server-1.onrender.com"); // replace with your server URL
 
 function App() {
   const [roomCode, setRoomCode] = useState("");
@@ -20,6 +20,7 @@ function App() {
   }, []);
 
   const createRoom = () => {
+    if (!playerName.trim()) return alert("Enter your name first!");
     socket.emit("create_room", { hostName: playerName }, ({ roomCode }) => {
       setRoomCode(roomCode);
       setIsHost(true);
@@ -27,6 +28,7 @@ function App() {
   };
 
   const joinRoom = () => {
+    if (!playerName.trim()) return alert("Enter your name first!");
     socket.emit("join_room", { roomCode, name: playerName }, ({ ok }) => {
       if (ok) setIsHost(false);
     });
@@ -80,7 +82,9 @@ function App() {
     <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
       <h2 className="text-xl font-bold">Room: {roomCode}</h2>
       <ul className="mt-4">
-        {room.players.map((p) => (
+        {room.players.map((p) => {
+          const isBuzzed = room.buzzed === p.id;
+          return (
           <li key={p.id} className="mb-2">
             {p.name} — {p.score} pts{" "}
             {isHost && (
@@ -100,7 +104,7 @@ function App() {
               </span>
             )}
           </li>
-        ))}
+        )})}
       </ul>
 
       {!isHost && (
