@@ -1,148 +1,134 @@
 import React, { useState, useEffect } from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
 import io from "socket.io-client";
 
-const socket = io("https://buzz-in-server.onrender.com"); // update with your deployed server URL
+const socket = io("https://your-server-url.onrender.com"); // replace with your server URL
 
-const App = () => {
-  const [name, setName] = useState("");
+function App() {
   const [roomCode, setRoomCode] = useState("");
-  const [playerId, setPlayerId] = useState(null);
+  const [playerName, setPlayerName] = useState("");
+  const [isHost, setIsHost] = useState(false);
   const [room, setRoom] = useState(null);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    socket.on("connect", () => setPlayerId(socket.id));
-    socket.on("room_update", (roomData) => setRoom(roomData));
-    socket.on("player_buzzed", ({ playerId }) => {
-      alert(`Player ${playerId} buzzed in!`);
-    });
+    socket.on("room_update", (data) => setRoom({ ...data }));
+    socket.on("room_closed", () => setRoom(null));
     return () => {
       socket.off("room_update");
-      socket.off("player_buzzed");
+      socket.off("room_closed");
     };
   }, []);
 
-  // Host a game
-  const handleHostGame = () => {
-    if (!name.trim()) return setError("Enter a name to host");
-    socket.emit("create_room", { hostName: name }, (res) => {
-      if (res.ok) {
-        setRoomCode(res.roomCode);
-        setError("");
-      } else {
-        setError(res.error || "Failed to create room");
-      }
+  const createRoom = () => {
+    socket.emit("create_room", { hostName: playerName }, ({ roomCode }) => {
+      setRoomCode(roomCode);
+      setIsHost(true);
     });
   };
 
-  // Join a game
-  const handleJoinGame = () => {
-    if (!roomCode.trim() || !name.trim()) return setError("Enter name & code");
-    socket.emit("join_room", { roomCode, name }, (res) => {
-      if (res.ok) {
-        setError("");
-      } else {
-        setError(res.error || "Failed to join");
-      }
+  const joinRoom = () => {
+    socket.emit("join_room", { roomCode, name: playerName }, ({ ok }) => {
+      if (ok) setIsHost(false);
     });
   };
 
-  const isHost = room && room.hostId === playerId;
+  const buzz = () => socket.emit("buzz", { roomCode });
+
+  const awardPoints = (playerId, points) => {
+    socket.emit("award_points", { roomCode, playerId, points });
+  };
+
+  const resetBuzz = () => {
+    socket.emit("reset_buzz", { roomCode });
+  };
+
+  if (!room) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
+        <h1 className="text-2xl font-bold mb-4">Buzz In Game</h1>
+        <input
+          type="text"
+          placeholder="Your name"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          className="p-2 border mb-2"
+        />
+        <button
+          onClick={createRoom}
+          className="bg-blue-500 text-white px-4 py-2 rounded mb-2"
+        >
+          Create Room
+        </button>
+        <input
+          type="text"
+          placeholder="Room Code"
+          value={roomCode}
+          onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+          className="p-2 border mb-2"
+        />
+        <button
+          onClick={joinRoom}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Join Room
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">Buzz-In Game</h1>
+    <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
+      <h2 className="text-xl font-bold">Room: {roomCode}</h2>
+      <ul className="mt-4">
+        {room.players.map((p) => (
+          <li key={p.id} className="mb-2">
+            {p.name} — {p.score} pts{" "}
+            {isHost && (
+              <span>
+                <button
+                  className="ml-2 px-2 py-1 bg-green-400 rounded"
+                  onClick={() => awardPoints(p.id, +1)}
+                >
+                  +1
+                </button>
+                <button
+                  className="ml-2 px-2 py-1 bg-red-400 rounded"
+                  onClick={() => awardPoints(p.id, -1)}
+                >
+                  -1
+                </button>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
 
-      {!room && (
-        <div className="space-y-4">
-          <input
-            className="p-2 rounded text-black"
-            placeholder="Your Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <div>
-            <button
-              className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded mr-2"
-              onClick={handleHostGame}
-            >
-              Host Game
-            </button>
-            <input
-              className="p-2 rounded text-black"
-              placeholder="Room Code"
-              value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-            />
-            <button
-              className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded ml-2"
-              onClick={handleJoinGame}
-            >
-              Join Game
-            </button>
-          </div>
-          {error && <p className="text-red-400">{error}</p>}
-        </div>
+      {!isHost && (
+        <button
+          onClick={buzz}
+          disabled={room.buzzed !== null}
+          className="mt-4 bg-yellow-400 px-6 py-3 rounded font-bold"
+        >
+          Buzz!
+        </button>
       )}
 
-      {room && (
-        <div>
-          <h2 className="text-2xl font-semibold mb-2">Room {room.code}</h2>
-          <ul className="mb-4">
-            {room.players.map((p) => (
-              <li key={p.id} className="flex items-center space-x-2">
-                <span>{p.name} ({p.team || "No team"}) - {p.score} pts</span>
-                {isHost && p.id !== playerId && (
-                  <div className="space-x-1">
-                    <button
-                      className="bg-purple-500 hover:bg-purple-600 px-2 py-1 rounded"
-                      onClick={() =>
-                        socket.emit("assign_team", { roomCode, playerId: p.id, team: "A" })
-                      }
-                    >
-                      Team A
-                    </button>
-                    <button
-                      className="bg-pink-500 hover:bg-pink-600 px-2 py-1 rounded"
-                      onClick={() =>
-                        socket.emit("assign_team", { roomCode, playerId: p.id, team: "B" })
-                      }
-                    >
-                      Team B
-                    </button>
-                    <button
-                      className="bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded"
-                      onClick={() =>
-                        socket.emit("award_points", { roomCode, playerId: p.id, delta: 1 })
-                      }
-                    >
-                      +1
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-600 px-2 py-1 rounded"
-                      onClick={() =>
-                        socket.emit("award_points", { roomCode, playerId: p.id, delta: -1 })
-                      }
-                    >
-                      -1
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+      {isHost && (
+        <button
+          onClick={resetBuzz}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Reset Buzz
+        </button>
+      )}
 
-          <button
-            className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded"
-            onClick={() => socket.emit("buzz", { roomCode })}
-          >
-            Buzz
-          </button>
+      {room.buzzed && (
+        <div className="mt-4 text-lg font-bold">
+          Buzzed: {room.players.find((p) => p.id === room.buzzed)?.name}
         </div>
       )}
     </div>
   );
-};
+}
 
-createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
