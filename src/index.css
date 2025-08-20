@@ -2,37 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Your existing custom styles === */
+/* === Global Theming === */
 body {
   margin: 0;
   font-family: "Segoe UI", Roboto, sans-serif;
-  background: linear-gradient(135deg, #141414, #1f1f1f);
   color: #f0f0f0;
-}
 
-/* ... all the other rules you pasted (app-container, lobby, players-list, host-controls, etc.) ... */
-
-/* === New gradient animation === */
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.bg-animated {
+  /* Apply animated gradient globally */
   background: linear-gradient(-45deg, #3b82f6, #2563eb, #1e40af, #1e3a8a);
   background-size: 400% 400%;
   animation: gradientShift 30s ease infinite;
 }
 
-/* Global Theming */
-body {
-  margin: 0;
-  font-family: "Segoe UI", Roboto, sans-serif;
-  background: linear-gradient(135deg, #141414, #1f1f1f);
-  color: #f0f0f0;
-}
-
+/* Lobby / General Containers */
 .app-container {
   max-width: 800px;
   margin: auto;
@@ -188,4 +170,11 @@ h1 {
 }
 .btn-negative:hover {
   background-color: #c0392b;
+}
+
+/* === Gradient Animation Keyframes === */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
