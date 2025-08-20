@@ -129,22 +129,27 @@ function App() {
           </button>
         </div>
       )}
-      <ul className="mb-4">
-        {room.players.map(p=>(
-          <li key={p.id} className="mb-1">
-            {p.name} ({p.score}) {p.team && `[${room.teams[p.team].name}]`}
-            {isHost && room.mode==="teams" && !p.team && (
-              <>
-                <button onClick={()=>assignTeam(p.id,"A")} className="ml-2 px-2 py-1 bg-blue-400 rounded">Team A</button>
-                <button onClick={()=>assignTeam(p.id,"B")} className="ml-2 px-2 py-1 bg-blue-600 rounded">Team B</button>
-              </>
-            )}
-            {isHost && room.mode==="freeplay" && (
-              <>
-                <button onClick={()=>awardPoints(p.id,1)} className="ml-2 px-2 py-1 bg-green-400 rounded">+1</button>
-                <button onClick={()=>awardPoints(p.id,-1)} className="ml-2 px-2 py-1 bg-red-400 rounded">-1</button>
-              </>
-            )}
+      {/* Player List as dark cards */}
+      <ul className="players-list mb-4">
+        {room.players.map((p) => (
+          <li key={p.id} className="player-card">
+            <span>
+              {p.name} ({p.score}) {p.team && `[${room.teams[p.team].name}]`}
+            </span>
+            <span>
+              {isHost && room.mode === "teams" && !p.team && (
+                <>
+                  <button onClick={() => assignTeam(p.id,"A")} className="ml-2 px-2 py-1 bg-blue-400 rounded">Team A</button>
+                  <button onClick={() => assignTeam(p.id,"B")} className="ml-2 px-2 py-1 bg-blue-600 rounded">Team B</button>
+                </>
+              )}
+              {isHost && room.mode === "freeplay" && (
+                <>
+                  <button onClick={() => awardPoints(p.id,1)} className="ml-2 px-2 py-1 bg-green-400 rounded">+1</button>
+                  <button onClick={() => awardPoints(p.id,-1)} className="ml-2 px-2 py-1 bg-red-400 rounded">-1</button>
+                </>
+              )}
+            </span>
           </li>
         ))}
       </ul>
