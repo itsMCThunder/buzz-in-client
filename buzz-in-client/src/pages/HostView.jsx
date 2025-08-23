@@ -75,3 +75,121 @@ export default function HostView({ socket, me, room, now, resetToHome }) {
             <span className="score">{room.teams.B.score}</span>
           </div>
           <div style={{display:'flex', gap:8, marginTop:8}}>
+            <button onClick={saveTeamNames}>Save Team Names</button>
+            <button onClick={clearScores}>Clear All Points</button>
+          </div>
+
+          <h3 style={{marginTop:16}}>Unassigned Players</h3>
+          <div className="list">
+            {unassigned.map(p => (
+              <div className="player" key={p.id}>
+                <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
+                <div>
+                  <button onClick={()=>assign(p.id,'A')}>Team A</button>{' '}
+                  <button onClick={()=>assign(p.id,'B')}>Team B</button>{' '}
+                  <button onClick={()=>assign(p.id,null)}>Clear</button>
+                </div>
+              </div>
+            ))}
+            {!unassigned.length && <small>No unassigned players yet...</small>}
+          </div>
+        </div>
+
+        <div className="col">
+          <h2>Team A</h2>
+          <div className="list">
+            {teamAIds.map(id => {
+              const p = players.find(x => x.id === id)
+              if (!p) return null
+              const isHot = room.hotSeats.A === p.id
+              return (
+                <div className="player" key={id}>
+                  <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
+                  <div>{isHot && <span className="badge">HOT SEAT</span>}</div>
+                </div>
+              )
+            })}
+            {!teamAIds.length && <small>No players on Team A</small>}
+          </div>
+
+          <h2 style={{marginTop:16}}>Team B</h2>
+          <div className="list">
+            {teamBIds.map(id => {
+              const p = players.find(x => x.id === id)
+              if (!p) return null
+              const isHot = room.hotSeats.B === p.id
+              return (
+                <div className="player" key={id}>
+                  <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
+                  <div>{isHot && <span className="badge">HOT SEAT</span>}</div>
+                </div>
+              )
+            })}
+            {!teamBIds.length && <small>No players on Team B</small>}
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{marginTop:16}}>
+        <h2>Round Controls</h2>
+        <div className="row">
+          <div className="col">
+            <div className="player"><div>Game State</div><div><strong>{room.state}</strong></div></div>
+
+            {room.state === 'lobby' && (
+              <button onClick={startGame}>Start Game</button>
+            )}
+
+            {room.state === 'inRound' && (
+              <div className="list">
+                <div className="player"><div>Hot Seat A</div><div>{hotA ? hotA.name : '-'}</div></div>
+                <div className="player"><div>Hot Seat B</div><div>{hotB ? hotB.name : '-'}</div></div>
+
+                <div className="player" style={{alignItems:'stretch'}}>
+                  <div>Buzz unlocks in</div>
+                  <div style={{minWidth:120, textAlign:'right'}}><strong>{unlockIn}</strong>s</div>
+                </div>
+                <div style={{height:8, background:'#20242b', borderRadius:6, overflow:'hidden'}}>
+                  <div style={{height:'100%', width:`${unlockPct*100}%`, background:'var(--warn)'}} />
+                </div>
+
+                <div className="player" style={{alignItems:'stretch', marginTop:8}}>
+                  <div>Current to decide</div>
+                  <div style={{textAlign:'right'}}><strong>{currentFrontPlayer ? currentFrontPlayer.name : '-'}</strong></div>
+                </div>
+                <div className="player" style={{alignItems:'stretch'}}>
+                  <div>Time to decide</div>
+                  <div style={{minWidth:120, textAlign:'right'}}><strong>{decideIn}</strong>s</div>
+                </div>
+                <div style={{height:8, background:'#20242b', borderRadius:6, overflow:'hidden'}}>
+                  <div style={{height:'100%', width:`${decidePct*100}%`, background:'var(--danger)'}} />
+                </div>
+
+                <div style={{display:'flex', gap:8, marginTop:8}}>
+                  <button onClick={award}>✅ Award Point</button>
+                  <button onClick={wrong}>❌ Wrong / Skip</button>
+                </div>
+
+                <h3 style={{marginTop:8}}>Queue</h3>
+                <div className="list">
+                  {room.queue.map((id, idx) => {
+                    const p = players.find(x => x.id === id)
+                    return <div className="player" key={id}><div>{idx+1}. {p ? p.name : id}</div><div /></div>
+                  })}
+                  {!room.queue.length && <small>No one has buzzed in yet.</small>}
+                </div>
+              </div>
+            )}
+
+            {room.state === 'summary' && (
+              <div>
+                <div className="player"><div>Round ended</div><div /></div>
+                <button onClick={nextRound}>Next Round</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
