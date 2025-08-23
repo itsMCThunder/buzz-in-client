@@ -13,7 +13,7 @@ function useSocket() {
         transports: ['websocket', 'polling'],
         path: '/socket.io',
         withCredentials: false,
-        autoConnect: true,
+        autoConnect: true
       }),
     []
   )
@@ -27,7 +27,7 @@ export default function App() {
   const [room, setRoom] = useState(null)
   const [error, setError] = useState(null)
 
-  // Global clock (nice-to-have; child views also have a fallback ticker)
+  // Global ticking clock: drives live countdowns
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
@@ -41,18 +41,26 @@ export default function App() {
       setMe({ role: null, name: '', code: '', id: '' })
       setRoom(null)
     }
-    const onCreated = ({ code }) => setMe((m) => ({ ...m, code }))
+    const onCreated = ({ code }) => setMe(m => ({ ...m, code }))
     const onErr = ({ message }) => setError(message)
+    const onKicked = () => {
+      alert('You were removed by the host.')
+      setMe({ role: null, name: '', code: '', id: '' })
+      setRoom(null)
+    }
 
     socket.on('room:update', onUpdate)
     socket.on('room:ended', onEnded)
     socket.on('host:roomCreated', onCreated)
     socket.on('error:message', onErr)
+    socket.on('player:kicked', onKicked)
+
     return () => {
       socket.off('room:update', onUpdate)
       socket.off('room:ended', onEnded)
       socket.off('host:roomCreated', onCreated)
       socket.off('error:message', onErr)
+      socket.off('player:kicked', onKicked)
     }
   }, [socket])
 
@@ -64,7 +72,13 @@ export default function App() {
   return (
     <div className="container">
       {!me.role && (
-        <Landing socket={socket} me={me} setMe={setMe} room={room} error={error} />
+        <Landing
+          socket={socket}
+          me={me}
+          setMe={setMe}
+          room={room}
+          error={error}
+        />
       )}
       {me.role === 'host' && (
         <HostView socket={socket} me={me} room={room} now={now} resetToHome={resetToHome} />
