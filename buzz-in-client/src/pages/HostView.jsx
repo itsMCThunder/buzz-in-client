@@ -1,14 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
-function secondsLeft(ts) {
+function secondsLeft(ts, now) {
   if (!ts) return 0
-  const diff = Math.max(0, Math.floor((ts - Date.now())/1000))
+  const diffMs = ts - now
+  const diff = Math.max(0, Math.ceil(diffMs / 1000))
   return diff
 }
 
 export default function HostView({ socket, me, room, resetToHome }) {
   const [teamAName, setTeamAName] = useState('')
   const [teamBName, setTeamBName] = useState('')
+  const [now, setNow] = useState(Date.now())
+
+  // Ticker to refresh countdowns ~4x/sec
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(t)
+  }, [])
 
   useEffect(() => {
     if (room) {
@@ -37,8 +45,8 @@ export default function HostView({ socket, me, room, resetToHome }) {
   }
   const clearScores = () => socket.emit('host:clearScores', { code: room.code })
 
-  const unlockIn = secondsLeft(room.buzzLockedUntil)
-  const decideIn = secondsLeft(room.currentBuzzDeadline)
+  const unlockIn = secondsLeft(room.buzzLockedUntil, now)
+  const decideIn = secondsLeft(room.currentBuzzDeadline, now)
 
   const currentFront = room.queue?.[0] || null
   const currentFrontPlayer = players.find(p => p.id === currentFront)
