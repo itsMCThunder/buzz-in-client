@@ -1,47 +1,35 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
-function secondsLeft(ts, now) {
-  if (!ts) return 0
-  const diffMs = ts - now
-  const diff = Math.max(0, Math.ceil(diffMs / 1000))
-  return diff
+function secondsLeft(deadlineMs, nowMs) {
+  if (!deadlineMs) return 0
+  const diffMs = deadlineMs - nowMs
+  return Math.max(0, Math.ceil(diffMs / 1000))
 }
 
-export default function PlayerView({ socket, me, room, resetToHome }) {
-  const [buzzing, setBuzzing] = useState(false)
-  const [now, setNow] = useState(Date.now())
+function pctRemaining(deadlineMs, nowMs, totalMs) {
+  if (!deadlineMs) return 0
+  const remain = Math.max(0, deadlineMs - nowMs)
+  return Math.max(0, Math.min(1, remain / totalMs))
+}
 
-  // Ticker to refresh countdowns ~4x/sec
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 250)
-    return () => clearInterval(t)
-  }, [])
-
-  // Keep room alive on free-tier idle
-  useEffect(() => {
-    const t = setInterval(() => {
-      if (room) socket.emit('ping:activity', { code: room.code })
-    }, 15000)
-    return () => clearInterval(t)
-  }, [socket, room])
-
+export default function PlayerView({ socket, me, room, now, resetToHome }) {
   if (!room) return <div className="card">Joining room...</div>
 
   const players = room.players || []
   const meFull = players.find(p => p.id === me.id)
   const myTeam = meFull?.team || null
 
+  const UNLOCK_MS = 20000
   const unlockIn = secondsLeft(room.buzzLockedUntil, now)
   const locked = unlockIn > 0
-  const isHot = room.hotSeats.A === me.id || room.hotSeats.B === me.id
+  const unlockPct = pctRemaining(room.buzzLockedUntil, now, UNLOCK_MS)
 
+  const isHot = room.hotSeats.A === me.id || room.hotSeats.B === me.id
   const queuedIdx = room.queue.indexOf(me.id)
 
   const tryBuzz = () => {
     if (!room) return
-    setBuzzing(true)
     socket.emit('player:buzz', { code: room.code, playerId: me.id })
-    setTimeout(() => setBuzzing(false), 500)
   }
 
   return (
@@ -68,7 +56,14 @@ export default function PlayerView({ socket, me, room, resetToHome }) {
 
       {room.state === 'inRound' && (
         <div className="center" style={{marginTop:16}}>
-          {locked && !isHot && <p>Buzzers unlock in <strong>{unlockIn}</strong>s</p>}
+          {locked && !isHot && (
+            <>
+              <p>Buzzers unlock in <strong>{unlockIn}</strong>s</p>
+              <div style={{height:8, background:'#20242b', borderRadius:6, overflow:'hidden', margin:'8px auto', maxWidth:360}}>
+                <div style={{height:'100%', width:`${unlockPct*100}%`, background:'var(--warn)'}} />
+              </div>
+            </>
+          )}
           <button
             style={{ fontSize: 24, padding: '20px 24px' }}
             disabled={locked && !isHot}
