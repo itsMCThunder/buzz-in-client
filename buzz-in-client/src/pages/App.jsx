@@ -7,13 +7,14 @@ import { io } from 'socket.io-client'
 const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 function useSocket() {
+  // Allow websocket with fallback to polling (helps free tiers/CDNs)
   const socket = useMemo(() => io(SERVER_URL, {
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'],
+    path: '/socket.io',
+    withCredentials: false,
     autoConnect: true
   }), [])
-  useEffect(() => {
-    return () => { socket.disconnect() }
-  }, [socket])
+  useEffect(() => () => socket.disconnect(), [socket])
   return socket
 }
 
@@ -23,22 +24,32 @@ export default function App() {
   const [room, setRoom] = useState(null)
   const [error, setError] = useState(null)
 
+  // ---- Global ticking clock: drives live countdowns everywhere ----
+  const [now, setNow] = useState(Date.now())
   useEffect(() => {
-    socket.on('room:update', (state) => setRoom(state))
-    socket.on('room:ended', ({ reason }) => {
+    const t = setInterval(() => setNow(Date.now()), 1000) // update every second
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    const onUpdate = (state) => setRoom(state)
+    const onEnded = ({ reason }) => {
       alert('Room ended: ' + reason)
       setMe({ role: null, name: '', code: '', id: '' })
       setRoom(null)
-    })
-    socket.on('host:roomCreated', ({ code }) => {
-      setMe(m => ({ ...m, code }))
-    })
-    socket.on('error:message', ({ message }) => setError(message))
+    }
+    const onCreated = ({ code }) => setMe(m => ({ ...m, code }))
+    const onErr = ({ message }) => setError(message)
+
+    socket.on('room:update', onUpdate)
+    socket.on('room:ended', onEnded)
+    socket.on('host:roomCreated', onCreated)
+    socket.on('error:message', onErr)
     return () => {
-      socket.off('room:update')
-      socket.off('room:ended')
-      socket.off('host:roomCreated')
-      socket.off('error:message')
+      socket.off('room:update', onUpdate)
+      socket.off('room:ended', onEnded)
+      socket.off('host:roomCreated', onCreated)
+      socket.off('error:message', onErr)
     }
   }, [socket])
 
@@ -59,10 +70,10 @@ export default function App() {
         />
       )}
       {me.role === 'host' && (
-        <HostView socket={socket} me={me} room={room} resetToHome={resetToHome} />
+        <HostView socket={socket} me={me} room={room} now={now} resetToHome={resetToHome} />
       )}
       {me.role === 'player' && (
-        <PlayerView socket={socket} me={me} room={room} resetToHome={resetToHome} />
+        <PlayerView socket={socket} me={me} room={room} now={now} resetToHome={resetToHome} />
       )}
     </div>
   )
