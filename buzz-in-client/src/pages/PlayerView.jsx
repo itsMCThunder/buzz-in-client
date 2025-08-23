@@ -1,29 +1,37 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
-function secondsLeft(ts) {
+function secondsLeft(ts, now) {
   if (!ts) return 0
-  const diff = Math.max(0, Math.floor((ts - Date.now())/1000))
+  const diffMs = ts - now
+  const diff = Math.max(0, Math.ceil(diffMs / 1000))
   return diff
 }
 
 export default function PlayerView({ socket, me, room, resetToHome }) {
   const [buzzing, setBuzzing] = useState(false)
+  const [now, setNow] = useState(Date.now())
 
+  // Ticker to refresh countdowns ~4x/sec
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(t)
+  }, [])
+
+  // Keep room alive on free-tier idle
   useEffect(() => {
     const t = setInterval(() => {
-      if (room) {
-        socket.emit('ping:activity', { code: room.code })
-      }
+      if (room) socket.emit('ping:activity', { code: room.code })
     }, 15000)
     return () => clearInterval(t)
   }, [socket, room])
 
   if (!room) return <div className="card">Joining room...</div>
+
   const players = room.players || []
   const meFull = players.find(p => p.id === me.id)
   const myTeam = meFull?.team || null
 
-  const unlockIn = secondsLeft(room.buzzLockedUntil)
+  const unlockIn = secondsLeft(room.buzzLockedUntil, now)
   const locked = unlockIn > 0
   const isHot = room.hotSeats.A === me.id || room.hotSeats.B === me.id
 
