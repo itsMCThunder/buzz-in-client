@@ -13,7 +13,6 @@ function pctRemaining(deadlineMs, nowMs, totalMs) {
 }
 
 export default function PlayerView({ socket, me, room, now: nowFromParent, resetToHome }) {
-  // 🔁 Fallback ticker (ensures live updates even if parent now isn't present)
   const [localNow, setLocalNow] = useState(Date.now())
   useEffect(() => {
     const t = setInterval(() => setLocalNow(Date.now()), 1000)
@@ -43,25 +42,19 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
   return (
     <div className="card">
       <div className="player">
-        <div>
-          Room: <strong>{room.code}</strong>
-        </div>
+        <div>Room: <strong>{room.code}</strong></div>
         <button onClick={resetToHome}>Leave</button>
       </div>
 
       <h2>Hello, {me.name}</h2>
       <div className="player">
         <div>Your Team</div>
-        <div>
-          <strong>{myTeam || 'Unassigned'}</strong>
-        </div>
+        <div><strong>{myTeam || 'Unassigned'}</strong></div>
       </div>
 
       <div className="player">
         <div>Game State</div>
-        <div>
-          <strong>{room.state}</strong>
-        </div>
+        <div><strong>{room.state}</strong></div>
       </div>
 
       {room.state === 'lobby' && <p>Waiting for the host to start the game...</p>}
@@ -70,26 +63,9 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
         <div className="center" style={{ marginTop: 16 }}>
           {locked && !isHot && (
             <>
-              <p>
-                Buzzers unlock in <strong>{unlockIn}</strong>s
-              </p>
-              <div
-                style={{
-                  height: 8,
-                  background: '#20242b',
-                  borderRadius: 6,
-                  overflow: 'hidden',
-                  margin: '8px auto',
-                  maxWidth: 360,
-                }}
-              >
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${unlockPct * 100}%`,
-                    background: 'var(--warn)',
-                  }}
-                />
+              <p>Buzzers unlock in <strong>{`${unlockIn}s`}</strong></p>
+              <div style={{ height: 8, background: '#20242b', borderRadius: 6, overflow: 'hidden', margin: '8px auto', maxWidth: 360 }}>
+                <div style={{ height: '100%', width: `${unlockPct * 100}%`, background: 'var(--warn)' }} />
               </div>
             </>
           )}
@@ -107,10 +83,7 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
         <div className="center" style={{ marginTop: 16 }}>
           <h3>Round Summary</h3>
           <p>Scores</p>
-          <p>
-            Team A: <strong>{room.teams.A.score}</strong> — Team B:{' '}
-            <strong>{room.teams.B.score}</strong>
-          </p>
+          <p>Team A: <strong>{room.teams.A.score}</strong> — Team B: <strong>{room.teams.B.score}</strong></p>
           <p>Waiting for next round...</p>
         </div>
       )}
