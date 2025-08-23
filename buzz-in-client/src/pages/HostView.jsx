@@ -46,6 +46,11 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
   const wrong = () => socket.emit('host:markWrongOrSkip', { code: room.code })
   const nextRound = () => socket.emit('host:nextRound', { code: room.code })
   const skipRound = () => socket.emit('host:skipRound', { code: room.code }) // NEW
+  const kick = (pid, name) => {
+    if (confirm(`Kick ${name || 'this player'} from the game?`)) {
+      socket.emit('host:kickPlayer', { code: room.code, playerId: pid })
+    }
+  }
   const saveTeamNames = () =>
     socket.emit('host:setTeamNames', { code: room.code, teamAName, teamBName })
   const clearScores = () => socket.emit('host:clearScores', { code: room.code })
@@ -83,7 +88,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
             <input value={teamBName} onChange={e => setTeamBName(e.target.value)} />
             <span className="score">{room.teams.B.score}</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap:'wrap' }}>
             <button onClick={saveTeamNames}>Save Team Names</button>
             <button onClick={clearScores}>Clear All Points</button>
           </div>
@@ -93,10 +98,11 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
             {unassigned.map(p => (
               <div className="player" key={p.id}>
                 <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
-                <div>
-                  <button onClick={() => assign(p.id, 'A')}>Team A</button>{' '}
-                  <button onClick={() => assign(p.id, 'B')}>Team B</button>{' '}
+                <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+                  <button onClick={() => assign(p.id, 'A')}>Team A</button>
+                  <button onClick={() => assign(p.id, 'B')}>Team B</button>
                   <button onClick={() => assign(p.id, null)}>Clear</button>
+                  <button onClick={() => kick(p.id, p.name)}>Kick</button> {/* NEW */}
                 </div>
               </div>
             ))}
@@ -105,7 +111,6 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
         </div>
 
         <div className="col">
-          {/* Use the ACTUAL team names here */}
           <h2>{room.teams.A.name}</h2>
           <div className="list">
             {teamAIds.map(id => {
@@ -115,7 +120,10 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
               return (
                 <div className="player" key={id}>
                   <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
-                  <div>{isHot && <span className="badge">HOT SEAT</span>}</div>
+                  <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                    {isHot && <span className="badge">HOT SEAT</span>}
+                    <button onClick={() => kick(p.id, p.name)}>Kick</button> {/* NEW */}
+                  </div>
                 </div>
               )
             })}
@@ -131,7 +139,10 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
               return (
                 <div className="player" key={id}>
                   <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
-                  <div>{isHot && <span className="badge">HOT SEAT</span>}</div>
+                  <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                    {isHot && <span className="badge">HOT SEAT</span>}
+                    <button onClick={() => kick(p.id, p.name)}>Kick</button> {/* NEW */}
+                  </div>
                 </div>
               )
             })}
@@ -184,7 +195,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
                 <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap:'wrap' }}>
                   <button onClick={award}>✅ Award Point</button>
                   <button onClick={wrong}>❌ Wrong / Skip Player</button>
-                  <button onClick={skipRound}>⏭️ Skip Round</button> {/* NEW */}
+                  <button onClick={skipRound}>⏭️ Skip Round</button>
                 </div>
 
                 <h3 style={{ marginTop: 8 }}>Queue</h3>
