@@ -23,8 +23,9 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
   if (!room) return <div className="card">Joining room...</div>
 
   const players = room.players || []
-  const meFull = players.find((p) => p.id === me.id)
-  const myTeam = meFull?.team || null
+  const meFull = players.find(p => p.id === me.id)
+  const myTeamKey = meFull?.team || null
+  const myTeamName = myTeamKey ? room.teams[myTeamKey].name : null
 
   const UNLOCK_MS = 20000
   const unlockIn = secondsLeft(room.buzzLockedUntil, now)
@@ -49,7 +50,7 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
       <h2>Hello, {me.name}</h2>
       <div className="player">
         <div>Your Team</div>
-        <div><strong>{myTeam || 'Unassigned'}</strong></div>
+        <div><strong>{myTeamName || 'Unassigned'}</strong></div>
       </div>
 
       <div className="player">
@@ -64,8 +65,8 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
           {locked && !isHot && (
             <>
               <p>Buzzers unlock in <strong>{`${unlockIn}s`}</strong></p>
-              <div style={{ height: 8, background: '#20242b', borderRadius: 6, overflow: 'hidden', margin: '8px auto', maxWidth: 360 }}>
-                <div style={{ height: '100%', width: `${unlockPct * 100}%`, background: 'var(--warn)' }} />
+              <div style={{height:8, background:'#20242b', borderRadius:6, overflow:'hidden', margin:'8px auto', maxWidth:360}}>
+                <div style={{height:'100%', width:`${unlockPct*100}%`, background:'var(--warn)'}} />
               </div>
             </>
           )}
@@ -74,16 +75,20 @@ export default function PlayerView({ socket, me, room, now: nowFromParent, reset
             disabled={locked && !isHot}
             onClick={tryBuzz}
           >
-            {queuedIdx !== -1 ? `Buzzed! In queue #${queuedIdx + 1}` : 'Buzz'}
+            {queuedIdx !== -1 ? `Buzzed! In queue #${queuedIdx+1}` : 'Buzz'}
           </button>
         </div>
       )}
 
       {room.state === 'summary' && (
-        <div className="center" style={{ marginTop: 16 }}>
+        <div className="center" style={{marginTop:16}}>
           <h3>Round Summary</h3>
           <p>Scores</p>
-          <p>Team A: <strong>{room.teams.A.score}</strong> — Team B: <strong>{room.teams.B.score}</strong></p>
+          <p>
+            {room.teams.A.name}: <strong>{room.teams.A.score}</strong>
+            {' '}—{' '}
+            {room.teams.B.name}: <strong>{room.teams.B.score}</strong>
+          </p>
           <p>Waiting for next round...</p>
         </div>
       )}
