@@ -16,7 +16,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
   const [teamAName, setTeamAName] = useState('')
   const [teamBName, setTeamBName] = useState('')
 
-  // 🔁 Fallback ticker (ensures live updates even if parent now isn't present)
+  // Fallback local ticker so numbers always update
   const [localNow, setLocalNow] = useState(Date.now())
   useEffect(() => {
     const t = setInterval(() => setLocalNow(Date.now()), 1000)
@@ -67,9 +67,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
         <div className="col">
           <h2>Host Panel</h2>
           <div className="player">
-            <div>
-              Room Code: <strong>{room.code}</strong>
-            </div>
+            <div>Room Code: <strong>{room.code}</strong></div>
             <button onClick={resetToHome}>Leave</button>
           </div>
 
@@ -150,45 +148,24 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
           <div className="col">
             <div className="player">
               <div>Game State</div>
-              <div>
-                <strong>{room.state}</strong>
-              </div>
+              <div><strong>{room.state}</strong></div>
             </div>
 
             {room.state === 'lobby' && <button onClick={startGame}>Start Game</button>}
 
             {room.state === 'inRound' && (
               <div className="list">
-                <div className="player">
-                  <div>Hot Seat A</div>
-                  <div>{hotA ? hotA.name : '-'}</div>
-                </div>
-                <div className="player">
-                  <div>Hot Seat B</div>
-                  <div>{hotB ? hotB.name : '-'}</div>
-                </div>
+                <div className="player"><div>Hot Seat A</div><div>{hotA ? hotA.name : '-'}</div></div>
+                <div className="player"><div>Hot Seat B</div><div>{hotB ? hotB.name : '-'}</div></div>
 
                 <div className="player" style={{ alignItems: 'stretch' }}>
                   <div>Buzz unlocks in</div>
                   <div style={{ minWidth: 120, textAlign: 'right' }}>
-                    <strong>{unlockIn}</strong>s
+                    <strong>{`${unlockIn}s`}</strong>
                   </div>
                 </div>
-                <div
-                  style={{
-                    height: 8,
-                    background: '#20242b',
-                    borderRadius: 6,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${unlockPct * 100}%`,
-                      background: 'var(--warn)',
-                    }}
-                  />
+                <div style={{ height: 8, background: '#20242b', borderRadius: 6, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${unlockPct * 100}%`, background: 'var(--warn)' }} />
                 </div>
 
                 <div className="player" style={{ alignItems: 'stretch', marginTop: 8 }}>
@@ -200,24 +177,11 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
                 <div className="player" style={{ alignItems: 'stretch' }}>
                   <div>Time to decide</div>
                   <div style={{ minWidth: 120, textAlign: 'right' }}>
-                    <strong>{decideIn}</strong}s
+                    <strong>{`${decideIn}s`}</strong>
                   </div>
                 </div>
-                <div
-                  style={{
-                    height: 8,
-                    background: '#20242b',
-                    borderRadius: 6,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${decidePct * 100}%`,
-                      background: 'var(--danger)',
-                    }}
-                  />
+                <div style={{ height: 8, background: '#20242b', borderRadius: 6, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${decidePct * 100}%`, background: 'var(--danger)' }} />
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
@@ -231,9 +195,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
                     const p = players.find((x) => x.id === id)
                     return (
                       <div className="player" key={id}>
-                        <div>
-                          {idx + 1}. {p ? p.name : id}
-                        </div>
+                        <div>{idx + 1}. {p ? p.name : id}</div>
                         <div />
                       </div>
                     )
@@ -245,10 +207,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
 
             {room.state === 'summary' && (
               <div>
-                <div className="player">
-                  <div>Round ended</div>
-                  <div />
-                </div>
+                <div className="player"><div>Round ended</div><div /></div>
                 <button onClick={nextRound}>Next Round</button>
               </div>
             )}
