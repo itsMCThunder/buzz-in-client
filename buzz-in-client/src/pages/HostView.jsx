@@ -36,7 +36,8 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
   const players = room.players || []
   const teamAIds = room.teams.A.players || []
   const teamBIds = room.teams.B.players || []
-  const unassigned = players.filter((p) => p.team !== 'A' && p.team !== 'B')
+
+  const unassigned = players.filter(p => p.team !== 'A' && p.team !== 'B')
 
   const assign = (pid, t) =>
     socket.emit('host:assignPlayerToTeam', { code: room.code, playerId: pid, team: t })
@@ -44,6 +45,7 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
   const award = () => socket.emit('host:awardPoint', { code: room.code })
   const wrong = () => socket.emit('host:markWrongOrSkip', { code: room.code })
   const nextRound = () => socket.emit('host:nextRound', { code: room.code })
+  const skipRound = () => socket.emit('host:skipRound', { code: room.code }) // NEW
   const saveTeamNames = () =>
     socket.emit('host:setTeamNames', { code: room.code, teamAName, teamBName })
   const clearScores = () => socket.emit('host:clearScores', { code: room.code })
@@ -57,9 +59,10 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
   const decidePct = pctRemaining(room.currentBuzzDeadline, now, DECISION_MS)
 
   const currentFront = room.queue?.[0] || null
-  const currentFrontPlayer = players.find((p) => p.id === currentFront)
-  const hotA = players.find((p) => p.id === room.hotSeats.A)
-  const hotB = players.find((p) => p.id === room.hotSeats.B)
+  const currentFrontPlayer = players.find(p => p.id === currentFront)
+
+  const hotA = players.find(p => p.id === room.hotSeats.A)
+  const hotB = players.find(p => p.id === room.hotSeats.B)
 
   return (
     <div className="card">
@@ -73,11 +76,11 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
 
           <h3>Teams</h3>
           <div className="team-header">
-            <input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
+            <input value={teamAName} onChange={e => setTeamAName(e.target.value)} />
             <span className="score">{room.teams.A.score}</span>
           </div>
           <div className="team-header" style={{ marginTop: 8 }}>
-            <input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
+            <input value={teamBName} onChange={e => setTeamBName(e.target.value)} />
             <span className="score">{room.teams.B.score}</span>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
@@ -87,11 +90,9 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
 
           <h3 style={{ marginTop: 16 }}>Unassigned Players</h3>
           <div className="list">
-            {unassigned.map((p) => (
+            {unassigned.map(p => (
               <div className="player" key={p.id}>
-                <div>
-                  {p.name} {!p.connected && <span className="badge">disconnected</span>}
-                </div>
+                <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
                 <div>
                   <button onClick={() => assign(p.id, 'A')}>Team A</button>{' '}
                   <button onClick={() => assign(p.id, 'B')}>Team B</button>{' '}
@@ -104,40 +105,37 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
         </div>
 
         <div className="col">
-          <h2>Team A</h2>
+          {/* Use the ACTUAL team names here */}
+          <h2>{room.teams.A.name}</h2>
           <div className="list">
-            {teamAIds.map((id) => {
-              const p = players.find((x) => x.id === id)
+            {teamAIds.map(id => {
+              const p = players.find(x => x.id === id)
               if (!p) return null
               const isHot = room.hotSeats.A === p.id
               return (
                 <div className="player" key={id}>
-                  <div>
-                    {p.name} {!p.connected && <span className="badge">disconnected</span>}
-                  </div>
+                  <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
                   <div>{isHot && <span className="badge">HOT SEAT</span>}</div>
                 </div>
               )
             })}
-            {!teamAIds.length && <small>No players on Team A</small>}
+            {!teamAIds.length && <small>No players on {room.teams.A.name}</small>}
           </div>
 
-          <h2 style={{ marginTop: 16 }}>Team B</h2>
+          <h2 style={{ marginTop: 16 }}>{room.teams.B.name}</h2>
           <div className="list">
-            {teamBIds.map((id) => {
-              const p = players.find((x) => x.id === id)
+            {teamBIds.map(id => {
+              const p = players.find(x => x.id === id)
               if (!p) return null
               const isHot = room.hotSeats.B === p.id
               return (
                 <div className="player" key={id}>
-                  <div>
-                    {p.name} {!p.connected && <span className="badge">disconnected</span>}
-                  </div>
+                  <div>{p.name} {!p.connected && <span className="badge">disconnected</span>}</div>
                   <div>{isHot && <span className="badge">HOT SEAT</span>}</div>
                 </div>
               )
             })}
-            {!teamBIds.length && <small>No players on Team B</small>}
+            {!teamBIds.length && <small>No players on {room.teams.B.name}</small>}
           </div>
         </div>
       </div>
@@ -146,12 +144,11 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
         <h2>Round Controls</h2>
         <div className="row">
           <div className="col">
-            <div className="player">
-              <div>Game State</div>
-              <div><strong>{room.state}</strong></div>
-            </div>
+            <div className="player"><div>Game State</div><div><strong>{room.state}</strong></div></div>
 
-            {room.state === 'lobby' && <button onClick={startGame}>Start Game</button>}
+            {room.state === 'lobby' && (
+              <button onClick={startGame}>Start Game</button>
+            )}
 
             {room.state === 'inRound' && (
               <div className="list">
@@ -184,21 +181,17 @@ export default function HostView({ socket, me, room, now: nowFromParent, resetTo
                   <div style={{ height: '100%', width: `${decidePct * 100}%`, background: 'var(--danger)' }} />
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap:'wrap' }}>
                   <button onClick={award}>✅ Award Point</button>
-                  <button onClick={wrong}>❌ Wrong / Skip</button>
+                  <button onClick={wrong}>❌ Wrong / Skip Player</button>
+                  <button onClick={skipRound}>⏭️ Skip Round</button> {/* NEW */}
                 </div>
 
                 <h3 style={{ marginTop: 8 }}>Queue</h3>
                 <div className="list">
                   {room.queue.map((id, idx) => {
-                    const p = players.find((x) => x.id === id)
-                    return (
-                      <div className="player" key={id}>
-                        <div>{idx + 1}. {p ? p.name : id}</div>
-                        <div />
-                      </div>
-                    )
+                    const p = players.find(x => x.id === id)
+                    return <div className="player" key={id}><div>{idx+1}. {p ? p.name : id}</div><div /></div>
                   })}
                   {!room.queue.length && <small>No one has buzzed in yet.</small>}
                 </div>
